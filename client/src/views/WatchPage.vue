@@ -29,7 +29,7 @@
                     x: player.x,
                     y: player.y,
                     radius: 6,
-                    fill: (player.isTerrorist ? '#EDE67F' : '#78A8CA')
+                    fill: '#78A8CA',
                   }">
 
                 </v-circle>
@@ -88,6 +88,7 @@
 
 <script>
 import Konva from "konva";
+import json from "../../public/demo/LGP2J8.json"
 
 const sideLength = window.innerHeight*.6;
 
@@ -95,75 +96,42 @@ export default {
   data() {
     return {
       lines: [],
+      myjson: json,
       isDrawing: false,
       selectedTool: 'brush',
+      roundNumber: 1,
       sideLength: sideLength,
-      players: [
-        {
-          id: 1,
-          isTerrorist: true,
-          x: 250,
-          y: 520,
-        },
-        {
-          id: 2,
-          isTerrorist: false,
-          x: 350,
-          y: 120,
-        },
-        {
-          id: 3,
-          isTerrorist: true,
-          x: 220,
-          y: 522,
-        },
-        {
-          id: 4,
-          isTerrorist: false,
-          x: 350,
-          y: 100,
-        },
-        {
-          id: 5,
-          isTerrorist: true,
-          x: 200,
-          y: 540,
-        },
-        {
-          id: 6,
-          isTerrorist: false,
-          x: 370,
-          y: 120,
-        },
-        {
-          id: 7,
-          isTerrorist: true,
-          x: 260,
-          y: 540,
-        },
-        {
-          id: 8,
-          isTerrorist: false,
-          x: 350,
-          y: 140,
-        },
-        {
-          id: 9,
-          isTerrorist: true,
-          x: 240,
-          y: 540,
-        },
-        {
-          id: 10,
-          isTerrorist: false,
-          x: 370,
-          y: 100,
-        },
-        
-      ],
       configKonva: {
         width: sideLength,
         height: sideLength,
+      },
+      players: [],
+      mapInfo: {
+        'de_mirage': {
+            scale: 5,
+            x0: -3230,
+            y0: 1713
+        },
+        'de_dust2': {
+            scale: 7,
+            x0: -3453,
+            y0: 2887
+        },
+        'de_inferno': {
+            scale: 4.9,
+            x0: -2087,
+            y0: 3870
+        },
+        'de_overpass': {
+            scale: 5.2,
+            x0: -4831,
+            y0: 1781
+        },
+        'de_train': {
+            scale: 4.7,
+            x0: -2477,
+            y0: 2392
+        }
       },
       playerConf: {
         radius: 6,
@@ -176,10 +144,61 @@ export default {
   },
   methods: {
     play() {
-      this.players[0].x = 100
+      this.playDemo(this.myjson)
+    },
+    isTerrorist(playerID) {
+      return playerID
+    },
+    playDemo(demo) {
+      console.log(demo);
+      
+      let round = demo.rounds[this.roundNumber];
+      
+      for (const [id] of Object.entries(round.teamCT)) {
+        let tempObj = round.teamCT[id]
+        tempObj.x = 0;
+        tempObj.y = 0;
+        tempObj.team = "CT"
+        this.players.push(tempObj)
+      }
+
+      for (const [id] of Object.entries(round.teamT)) {
+        let tempObj = round.teamT[id]
+        tempObj.x = 0;
+        tempObj.y = 0;
+        tempObj.team = "T"
+        this.players.push(tempObj)
+      }
+
+      let tick = 0;
+
+      for (const [id] of Object.entries(demo.rounds[this.roundNumber].player_positions[tick].players)) {
+        console.log(demo.rounds[this.roundNumber].player_positions[tick].players[id])
+
+        let index = this.players.findIndex(x => x.id == id);
+
+        let x = (demo.rounds[this.roundNumber].player_positions[tick].players[id].position.x)
+        let y = (demo.rounds[this.roundNumber].player_positions[tick].players[id].position.y)
+
+        x = -3453
+        y = 2887
+
+
+        const info = this.mapInfo[demo.map];
+        const k = this.sideLength / 1024;
+
+        this.players[index].x = (x-info.x0)*k/info.scale;
+        this.players[index].y = (info.y0-y)*k/info.scale;
+
+        console.log(this.players[index].x)
+        console.log((demo.rounds[this.roundNumber].player_positions[tick].players[id].position.x))
+        console.log(this.players)
+      }
+
     },
     updateTool(tool) {
       this.selectedTool = tool
+
     },
     deleteLines() {
       this.lines = []
